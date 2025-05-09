@@ -1,54 +1,66 @@
 // src/App.js
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import Webcam from 'react-webcam';
+import './App.css';
 
 function App() {
   const webcamRef = useRef(null);
-  const [label, setLabel] = useState('No gesture detected');
+  const canvasRef = useRef(null);
+  const [gesture, setGesture] = useState('');
 
-  const captureAndDetect = useCallback(async () => {
+  // Draw a box on the canvas
+  const drawBox = ([l, t, r, b]) => {
+    const ctx = canvasRef.current.getContext('2d');
+    ctx.clearRect(0, 0, 640, 480);
+    ctx.strokeStyle = 'lime';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(l, t, r - l, b - t);
+  };
+
+  const detect = useCallback(async () => {
     if (!webcamRef.current) return;
-    const imageSrc = webcamRef.current.getScreenshot({ width: 640, height: 480 });
-    if (!imageSrc) return;
-
-    // Convert base64 to Blob
-    const res = await fetch(imageSrc);
-    const blob = await res.blob();
-    const formData = new FormData();
-    formData.append('file', blob, 'frame.jpg');
+    const imgSrc = webcamRef.current.getScreenshot({ width: 640, height: 480 });
+    const blob = await (await fetch(imgSrc)).blob();
+    const form = new FormData();
+    form.append('file', blob, 'frame.jpg');
 
     try {
-      const resp = await fetch(' https://e471-136-158-123-1.ngrok-free.app/detect', {
-        method: 'POST',
-        body: formData,
-      });
-      const json = await resp.json();
-      // Assume your backend returns { label: 'Hello', boxes: [...] }
-      setLabel(json.label);
-      // You can also draw boxes on a canvas if you return coords
-    } catch (err) {
-      console.error('Detection error', err);
+      const res = await fetch('/detect', { method: 'POST', body: form });
+      const { gesture, bbox } = await res.json();
+      setGesture(gesture);
+      if (bbox) drawBox(bbox);
+    } catch (e) {
+      console.error('Detect error', e);
     }
-  }, [webcamRef]);
+  }, []);
 
-  // Capture & send a frame every 500ms
-  React.useEffect(() => {
-    const id = setInterval(captureAndDetect, 1);
+  useEffect(() => {
+    const id = setInterval(detect, 500);
     return () => clearInterval(id);
-  }, [captureAndDetect]);
+  }, [detect]);
 
   return (
     <div style={{ textAlign: 'center', padding: '2rem' }}>
-      <h1>SignSpeak Demo</h1>
-      <Webcam
-        audio={false}
-        ref={webcamRef}
-        screenshotFormat="image/jpeg"
-        width={640}
-        height={480}
-        videoConstraints={{ facingMode: 'user' }}
-      />
-      <p style={{ fontSize: '1.5rem', marginTop: '1rem' }}>{label}</p>
+      <h1>SignSpeak Live</h1>
+      <div style={{ position: 'relative', width: 640, height: 480 }}>
+        <Webcam
+          audio={false}
+          ref={webcamRef}
+          screenshotFormat="image/jpeg"
+          width={640}
+          height={480}
+          videoConstraints={{ facingMode: 'user' }}
+        />
+        <canvas
+          ref={canvasRef}
+          width={640}
+          height={480}
+          style={{ position: 'absolute', top: 0, left: 0 }}
+        />
+      </div>
+      <p style={{ marginTop: '1rem', fontSize: '1.25rem' }}>
+        Detected Gesture: <strong>{gesture}</strong>
+      </p>
     </div>
   );
 }
