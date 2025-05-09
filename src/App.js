@@ -35,7 +35,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const id = setInterval(detect, 100);
+    const id = setInterval(detect, 10);
     return () => clearInterval(id);
   }, [detect]);
 
