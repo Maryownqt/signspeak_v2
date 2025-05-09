@@ -1,0 +1,12 @@
+# netlify.toml
+
+[[redirects]]
+  from   = "/video_feed"
+  to     = "https://e471-136-158-123-1.ngrok-free.app/video_feed"
+  status = 200
+  force  = true
+
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
