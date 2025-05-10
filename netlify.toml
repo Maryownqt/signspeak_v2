@@ -6,14 +6,14 @@
 
 [[redirects]]
   from     = "/detect"
-  to       = "https://e471-136-158-123-1.ngrok-free.app/detect"
+  to       = "https://3993-136-158-123-1.ngrok-free.app/detect"
   status   = 200
   force    = true
   methods  = ["POST"]
 
 [[redirects]]
   from     = "/video_feed"
-  to       = "https://e471-136-158-123-1.ngrok-free.app/video_feed"
+  to       = "https://3993-136-158-123-1.ngrok-free.app/video_feed"
   status   = 200
   force    = true
   methods  = ["GET"]
